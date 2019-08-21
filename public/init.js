@@ -1,5 +1,5 @@
 const io = require("socket.io-client");
-const socket = io("http://localhost:3000");
+const socket = io("https://p2p-beta.herokuapp.com");
 const room_container = document.getElementById('room_container');
 
 
