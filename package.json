@@ -1,0 +1,21 @@
+{
+  "name": "p2p",
+  "version": "2.0.0",
+  "description": "A p2p chat app.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon run index",
+    "start": "node index"
+  },
+  "author": "Ehsaan",
+  "license": "MIT",
+  "dependencies": {
+    "ejs": "^2.6.2",
+    "express": "^4.17.1",
+    "simple-peer": "^9.5.0",
+    "socket.io": "^2.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.1"
+  }
+}

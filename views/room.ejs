@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="description" content="A p2p chat app" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://p2p-beta.herokuapp.com/style.css" />
+    <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet" />
+    <script>
+        const room = "<%=room_name%>"
+    </script>
+    <script src="https://p2p-beta.herokuapp.com/main.js" charset="utf-8"></script>
+    <title><%=room_name%></title>
+</head>
+
+<body>
+    <div class="v-header v-container">
+        <div class="fullscreen-video-wrap">
+            <video id="remote_stream"></video>
+        </div>
+
+        <div id="main" class="header-content container">
+
+
+
+            <!--Local stream-->
+            <video id="host_stream" autoplay muted></video>
+
+        </div>
+
+
+</body>
+
+</html>

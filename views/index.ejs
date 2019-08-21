@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="description" content="A p2p chat app" />
+    <title>p2p</title>
+     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet" />
+      <link rel="stylesheet" href="https://p2p-beta.herokuapp.com/style.css" />
+   </head>
+<body>
+ <div class="v-header v-container">
+<div class=" header-content container">
+  <h3 class=" text-primary" >Create a room to get started.</h3>
+    <form action="/createroom" method="POST">
+        <input class="form-control-sm" name="room" type="text" required/>
+        <button class="btn btn-outline-success" type="submit">GO</button>
+
+    </form></br>
+  
+  <div class="list-group" id="room_container" >
+  <% Object.keys(rooms).forEach(room => { %>
+            <div><%= room %></div>
+            <a href="/r/<%= room%>">Join</a>
+
+    <% }); %>
+  </div>
+</div>
+</div>
+    <script src="https://p2p-beta.herokuapp.com/bundle.js" charset="utf-8"></script>
+</body>
+</html>
