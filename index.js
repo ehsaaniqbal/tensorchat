@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const server = require("http").Server(app);
+
 const io = require("socket.io")(server);
 const PORT = process.env.PORT || 3000;
 
@@ -16,6 +17,7 @@ let clients = 0;
 //@route -> index
 app.get("/", (req, res) => {
   res.render("index", { rooms: rooms });
+  
 });
 
 //@route -> room

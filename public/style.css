@@ -33,9 +33,12 @@ body{
 
 }
 .fullscreen-video-wrap video{
-    min-width: 100%;
-    min-height: 100%;
-
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+    object-fit: cover;
+    position: absolute;
+    
 }
 
 .header-content{
@@ -49,4 +52,5 @@ body{
     max-height: 17%;
     max-width: 17%;
     position: absolute;
+   
 }
