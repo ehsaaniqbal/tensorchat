@@ -6,6 +6,12 @@ document.addEventListener("DOMContentLoaded", event => {
   const socket = io("https://p2p-beta.herokuapp.com/");
   const host_stream = document.getElementById("host_stream");
   const remote_stream = document.getElementById("remote_stream");
+  const disableVideo = document.getElementById("disablevideo");
+  const mute = document.getElementById('mute');
+  const hangup = document.getElementById('hangup');
+  const inviteBtn = document.getElementById('invite');
+  const inviteModal = document.getElementById('invite-modal');
+  
 
   //initialize app with getUserMedia
   navigator.getMedia =
@@ -96,9 +102,34 @@ document.addEventListener("DOMContentLoaded", event => {
         remote_stream.remove();
         if (client.peer) {
           client.peer.destroy();
-          console.log("user disconnected");
-        }
+          }
       };
+
+      //hangup 
+      hangup.addEventListener('click', ()=>{
+        window.location.href = "https://tensorchat.herokuapp.com";
+        remove_peer();
+      })
+
+      //mute audio
+      mute.addEventListener('click', ()=>{
+        let audioTracks = localStream.getAudioTracks();
+        for (var i = 0; i < audioTracks.length; ++i) {
+          audioTracks[i].enabled = !audioTracks[i].enabled;
+        }
+      })
+
+      //disable video
+      disableVideo.addEventListener('click', ()=>{
+        videoTracks= localStream.getVideoTracks();
+        for (var i = 0; i < videoTracks.length; ++i) {
+          videoTracks[i].enabled = !videoTracks[i].enabled;
+        }
+      })
+
+      //invite 
+  
+
 
       //events
       socket.on("sent_offer", make_remote_peer);

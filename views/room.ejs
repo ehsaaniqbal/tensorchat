@@ -1,19 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="description" content="A p2p chat app" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="A p2p chat app" />
+    <title>TensorChat</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://p2p-beta.herokuapp.com/style.css" />
+     integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="../css/style.css" />
     <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet" />
+    <script src="https://kit.fontawesome.com/9eae4b25ce.js"></script>
     <script>
         const room = "<%=room_name%>"
     </script>
-    <script src="https://p2p-beta.herokuapp.com/main.js" charset="utf-8"></script>
-    <title><%=room_name%></title>
+    <script src="../js/bundle.js" type="text/javascript"></script>
+
 </head>
 
 <body>
@@ -21,14 +24,49 @@
         <div class="fullscreen-video-wrap">
             <video id="remote_stream" autoplay playsinline></video>
         </div>
-
-        <div id="main" class="header-content container">
-
-            <video id="host_stream" playsinline autoplay muted></video>
-
+    
+        
+        <div role="group" id="toolbar">
+            <button id="disablevideo" type="button" class="btn btn-outline-primary"><i class="fas fa-video-slash"></i></button>
+            <button id="mute" type="button" class="btn btn-outline-primary"><i class="fas fa-microphone-slash"></i></button>
+            <button id="messages" type="button" class="btn btn-outline-primary"><i class="fas fa-comments"></i></button>
+            <button id="hangup" type="button" class="btn btn-outline-danger"><i class="fas fa-phone-slash"></i></button>
         </div>
 
-
+       
+        <!-- Button trigger modal -->
+        <button id="invite" type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#inviteModal">
+                Invite <i class="far fa-envelope"></i>
+      </button>
+      
+      <!-- Modal -->
+      <div class="modal fade" id="inviteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Share this session URL below to invite friends.</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              TEST
+            </div>
+            <div class="modal-footer">
+             <button type="button" class="btn btn-primary">Copy</button>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+             
+            </div>
+          </div>
+        </div>
+      </div>
+        <div id="main" class="header-content container">
+            <video id="host_stream" playsinline autoplay muted></video>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </body>
 
 </html>

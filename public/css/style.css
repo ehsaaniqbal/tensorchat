@@ -24,20 +24,19 @@ body{
 
 }
 .fullscreen-video-wrap{
-    position: absolute;
+    position: fixed;
+    bottom:0;
+    right:0;
     top: 0;
     left: 0;
     width: 100%;
     height: 100vh;
     overflow: hidden;
-
+    z-index: -1;
 }
 .fullscreen-video-wrap video{
-    max-width: 100%;
-    max-height: 100%;
-    display: block;
-    object-fit: cover;
-    position: absolute;
+    min-width: 100%;
+    min-height: 100%;
     
 }
 
@@ -52,5 +51,18 @@ body{
     max-height: 17%;
     max-width: 17%;
     position: absolute;
-   
+}
+
+#toolbar{
+    z-index: 2;
+    bottom: 20px;
+    right: 20px;
+    position: absolute;
+}
+
+#invite{
+    z-index: 2;
+    top: 20px;
+    right: 20px;
+    position: absolute;
 }
