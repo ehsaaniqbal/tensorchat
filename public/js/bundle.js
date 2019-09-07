@@ -14294,19 +14294,19 @@ module.exports = yeast;
 
 },{}],77:[function(require,module,exports){
 document.addEventListener("DOMContentLoaded", event => {
-  let localStream,
-    client = {};
+  
+  let localStream,client = {};
   const Peer = require("simple-peer");
   const io = require("socket.io-client");
   const socket = io("https://p2p-beta.herokuapp.com/");
+  const clipboard = new ClipboardJS(".copy");
   const host_stream = document.getElementById("host_stream");
   const remote_stream = document.getElementById("remote_stream");
   const disableVideo = document.getElementById("disablevideo");
-  const mute = document.getElementById('mute');
-  const hangup = document.getElementById('hangup');
-  const inviteBtn = document.getElementById('invite');
-  const inviteModal = document.getElementById('invite-modal');
-  
+  const mute = document.getElementById("mute");
+  const hangup = document.getElementById("hangup");
+  const link = document.getElementById("link");
+  const invBtn = document.getElementById("invite");
 
   //initialize app with getUserMedia
   navigator.getMedia =
@@ -14397,37 +14397,39 @@ document.addEventListener("DOMContentLoaded", event => {
         remote_stream.remove();
         if (client.peer) {
           client.peer.destroy();
-          }
+        }
       };
 
-      //hangup 
-      hangup.addEventListener('click', ()=>{
+      //hangup
+      hangup.addEventListener("click", () => {
         window.location.href = "https://tensorchat.herokuapp.com";
         remove_peer();
-      })
+      });
 
       //mute audio
-      mute.addEventListener('click', ()=>{
+      mute.addEventListener("click", () => {
         let audioTracks = localStream.getAudioTracks();
         for (var i = 0; i < audioTracks.length; ++i) {
           audioTracks[i].enabled = !audioTracks[i].enabled;
         }
-      })
+      });
 
       //disable video
-      disableVideo.addEventListener('click', ()=>{
-        videoTracks= localStream.getVideoTracks();
+      disableVideo.addEventListener("click", () => {
+        videoTracks = localStream.getVideoTracks();
         for (var i = 0; i < videoTracks.length; ++i) {
           videoTracks[i].enabled = !videoTracks[i].enabled;
         }
-      })
+      });
 
-      //invite 
-      inviteBtn.addEventListener('click', ()=>{
-        inviteModal.modal('toggle');
-      })
-
-
+      //invite
+      invBtn.addEventListener("click", getUrl());
+      function getUrl(){
+        let url = window.location.href;
+        link.value = url;
+      }  
+     
+   
       //events
       socket.on("sent_offer", make_remote_peer);
       socket.on("sent_answer", signal_answer);
