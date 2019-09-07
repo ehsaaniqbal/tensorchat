@@ -66,3 +66,9 @@ body{
     right: 20px;
     position: absolute;
 }
+.modal-body{
+    color: black;
+}
+.modal-title{
+    color:black;
+}

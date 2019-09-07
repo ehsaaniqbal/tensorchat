@@ -1,5 +1,5 @@
 {
-  "name": "p2p",
+  "name": "TensorChat",
   "version": "2.0.0",
   "description": "A p2p chat app.",
   "main": "index.js",
