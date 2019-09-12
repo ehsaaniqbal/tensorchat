@@ -1,9 +1,9 @@
 document.addEventListener("DOMContentLoaded", event => {
-  let localStream,
-    client = {};
+  let localStream,client = {};
   const Peer = require("simple-peer");
   const io = require("socket.io-client");
   const socket = io("https://tensorchat.herokuapp.com");
+  const DetectRTC = require("detectrtc");
   const clipboard = new ClipboardJS(".copy");
   const host_stream = document.getElementById("host_stream");
   const remote_stream = document.getElementById("remote_stream");
@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", event => {
   const hangup = document.getElementById("hangup");
   const link = document.getElementById("link");
   const invBtn = document.getElementById("invite");
+  const waiting = document.getElementById("waiting");
 
   //initialize app with getUserMedia
   navigator.getMedia =
@@ -26,6 +27,13 @@ document.addEventListener("DOMContentLoaded", event => {
       audio: true
     })
     .then(stream => {
+      if (DetectRTC.isWebRTCSupported === false) {
+        alert("Device not supported!");
+      }
+      if (DetectRTC.osName === "iOS" && DetectRTC.browser !== "Safari") {
+        alert("Browser not supported! Please use Safari");
+      }
+
       //emit new client
       socket.emit("new_client", room);
       localStream = stream;
@@ -48,6 +56,7 @@ document.addEventListener("DOMContentLoaded", event => {
           trickle: false
         });
         peer.on("stream", stream => {
+          waiting.setAttribute("hidden", "");
           remote_stream.setAttribute("autoplay", "");
           remote_stream.setAttribute("muted", "");
           remote_stream.setAttribute("playsinline", "");
@@ -103,11 +112,11 @@ document.addEventListener("DOMContentLoaded", event => {
         if (client.peer) {
           client.peer.destroy();
         }
+        window.location.href = "/";
       };
 
       //hangup
       hangup.addEventListener("click", () => {
-        window.location.href = "https://tensorchat.herokuapp.com";
         remove_peer();
       });
 
@@ -128,11 +137,12 @@ document.addEventListener("DOMContentLoaded", event => {
       });
 
       //invite
-      invBtn.addEventListener("click", getUrl());
       function getUrl() {
         let url = window.location.href;
         link.value = url;
       }
+
+      invBtn.addEventListener("click", getUrl());
 
       //events
       socket.on("sent_offer", make_remote_peer);
@@ -142,7 +152,9 @@ document.addEventListener("DOMContentLoaded", event => {
       socket.on("create_peer", make_peer);
     })
     .catch(err => {
-      alert("Cannot get access to your camera! Check logs for more info.");
+      alert(
+        "Cannot get access to your media device! Check logs for more info."
+      );
       console.log(err);
     });
 });

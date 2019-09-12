@@ -2,81 +2,130 @@
 <html lang="en">
 
 <head>
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-108096166-5"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'UA-108096166-5');
-</script>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <meta name="description" content="A p2p chat app" />
-    <title>TensorChat</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-     integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous"/>
-    <link rel="stylesheet" href="../css/style.css" />
-    <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet" />
-    <script src="https://kit.fontawesome.com/9eae4b25ce.js"></script>
-    <script>
-        const room = "<%=room_name%>"
-    </script>
-    <script src="../js/bundle.js" type="text/javascript"></script>
-
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-108096166-5"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag("js", new Date());
+    gtag("config", "UA-108096166-5");
+  </script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="A p2p chat app" />
+  <title>TensorChat</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link href="https://fonts.googleapis.com/css?family=Poppins:200,300,400,600,700,800" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet" />
+  <script defer src="https://kit.fontawesome.com/9eae4b25ce.js"></script>
+  <script>
+    const room = "<%=room_name%>";
+  </script>
+  <script defer src="../js/bundle.js" type="text/javascript"></script>
 </head>
 
 <body>
-    <div class="v-header v-container">
-        <div class="fullscreen-video-wrap">
-            <video id="remote_stream" autoplay playsinline></video>
-        </div>
-    
-        
-        <div role="group" id="toolbar">
-            <button id="disablevideo" type="button" class="btn btn-outline-primary"><i class="fas fa-video-slash"></i></button>
-            <button id="mute" type="button" class="btn btn-outline-primary"><i class="fas fa-microphone-slash"></i></button>
-            <button id="messages" type="button" class="btn btn-outline-primary"><i class="fas fa-comments"></i></button>
-            <button id="hangup" type="button" class="btn btn-outline-danger"><i class="fas fa-phone-slash"></i></button>
-        </div>
+  <div class="v-header v-container">
 
-       
-        <!-- Button trigger modal -->
-        <button id="invite" type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#inviteModal">
-                Invite <i class="far fa-envelope"></i>
+    <!--Remote stream-->
+    <div class="fullscreen-video-wrap">
+      <video id="remote_stream" autoplay playsinline></video>
+    </div>
+
+    <!--Actionbar-->
+    <div role="group" id="actionbar">
+      <button id="disablevideo" type="button" class="btn btn-outline-primary">
+        <i class="fas fa-video-slash"></i>
       </button>
-      
-      <!-- Modal -->
-      <div class="modal fade" id="inviteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-          <div class="modal-content">
+      <button id="mute" type="button" class="btn btn-outline-primary">
+        <i class="fas fa-microphone-slash"></i>
+      </button>
+      <button id="hangup" type="button" class="btn btn-outline-danger">
+        <i class="fas fa-phone-slash"></i>
+      </button>
+    </div>
+
+    <!-- Button trigger modal -->
+    <button id="invite" type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#inviteModal">
+      <i class="far fa-envelope"></i>
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="inviteModal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-body">
             <div class="modal-header">
-              <h5 class="modal-title" id="exampleModalLabel">Share this session URL below to invite friends.</h5>
+              <h6 class="modal-title">
+                Share this session URL below to invite friends.
+              </h6>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
-            <div class="modal-body">
-              <input type="text" class="form-control" id="link"/>
-            </div>
-            <div class="modal-footer">
-             <button type="button"  class="btn btn-primary copy" data-clipboard-target="#link">Copy</button>
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-             
+            <div class="input-group mb-3">
+              <input type="text" class="form-control" id="link" />
+              <div class="input-group-append">
+                <button type="button" class="btn btn-outline-primary copy" data-clipboard-target="#link">
+                  <i class="far fa-copy"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-        <div id="main" class="header-content container">
-            <video id="host_stream" playsinline autoplay muted></video>
-        </div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js"></script>
-  </body>
 
+    <!--Toast-->
+    <div class="toast" data-delay="8000" role="alert" aria-live="assertive" aria-atomic="true"
+      style="position: absolute; top: 70px; right: 20px; background-color:white; color: black">
+      <div class="toast-header">
+        <strong class="mr-auto">Welcome</strong>
+        <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="toast-body">
+        <p>Share this session URL below to invite friends.</p>
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" id="toast-link" />
+          <div class="input-group-append">
+            <button class="btn btn-outline-primary copy" type="button" data-clipboard-target="#toast-link">
+              <i class="far fa-copy"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--Host stream-->
+    <div id="main" class="header-content container">
+      <h1 id="waiting">Waiting for someone to join...</h1>
+      <video id="host_stream" playsinline autoplay muted></video>
+    </div>
+  </div>
+
+  <!--Scripts-->
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+  <script>
+    $(document).ready(function () {
+      let toastLink = document.getElementById("toast-link");
+      toastLink.value = window.location.href;
+      $(".toast").toast("show");
+    });
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js"></script>
+</body>
 </html>

@@ -3793,7 +3793,1159 @@ function setup(env) {
 
 module.exports = setup;
 
-},{"ms":38}],17:[function(require,module,exports){
+},{"ms":39}],17:[function(require,module,exports){
+(function (process,global){
+'use strict';
+
+// Last Updated On: 2019-01-10 5:32:55 AM UTC
+
+// ________________
+// DetectRTC v1.3.9
+
+// Open-Sourced: https://github.com/muaz-khan/DetectRTC
+
+// --------------------------------------------------
+// Muaz Khan     - www.MuazKhan.com
+// MIT License   - www.WebRTC-Experiment.com/licence
+// --------------------------------------------------
+
+(function() {
+
+    var browserFakeUserAgent = 'Fake/5.0 (FakeOS) AppleWebKit/123 (KHTML, like Gecko) Fake/12.3.4567.89 Fake/123.45';
+
+    var isNodejs = typeof process === 'object' && typeof process.versions === 'object' && process.versions.node && /*node-process*/ !process.browser;
+    if (isNodejs) {
+        var version = process.versions.node.toString().replace('v', '');
+        browserFakeUserAgent = 'Nodejs/' + version + ' (NodeOS) AppleWebKit/' + version + ' (KHTML, like Gecko) Nodejs/' + version + ' Nodejs/' + version
+    }
+
+    (function(that) {
+        if (typeof window !== 'undefined') {
+            return;
+        }
+
+        if (typeof window === 'undefined' && typeof global !== 'undefined') {
+            global.navigator = {
+                userAgent: browserFakeUserAgent,
+                getUserMedia: function() {}
+            };
+
+            /*global window:true */
+            that.window = global;
+        } else if (typeof window === 'undefined') {
+            // window = this;
+        }
+
+        if (typeof location === 'undefined') {
+            /*global location:true */
+            that.location = {
+                protocol: 'file:',
+                href: '',
+                hash: ''
+            };
+        }
+
+        if (typeof screen === 'undefined') {
+            /*global screen:true */
+            that.screen = {
+                width: 0,
+                height: 0
+            };
+        }
+    })(typeof global !== 'undefined' ? global : window);
+
+    /*global navigator:true */
+    var navigator = window.navigator;
+
+    if (typeof navigator !== 'undefined') {
+        if (typeof navigator.webkitGetUserMedia !== 'undefined') {
+            navigator.getUserMedia = navigator.webkitGetUserMedia;
+        }
+
+        if (typeof navigator.mozGetUserMedia !== 'undefined') {
+            navigator.getUserMedia = navigator.mozGetUserMedia;
+        }
+    } else {
+        navigator = {
+            getUserMedia: function() {},
+            userAgent: browserFakeUserAgent
+        };
+    }
+
+    var isMobileDevice = !!(/Android|webOS|iPhone|iPad|iPod|BB10|BlackBerry|IEMobile|Opera Mini|Mobile|mobile/i.test(navigator.userAgent || ''));
+
+    var isEdge = navigator.userAgent.indexOf('Edge') !== -1 && (!!navigator.msSaveOrOpenBlob || !!navigator.msSaveBlob);
+
+    var isOpera = !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
+    var isFirefox = typeof window.InstallTrigger !== 'undefined';
+    var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    var isChrome = !!window.chrome && !isOpera;
+    var isIE = typeof document !== 'undefined' && !!document.documentMode && !isEdge;
+
+    // this one can also be used:
+    // https://www.websocket.org/js/stuff.js (DetectBrowser.js)
+
+    function getBrowserInfo() {
+        var nVer = navigator.appVersion;
+        var nAgt = navigator.userAgent;
+        var browserName = navigator.appName;
+        var fullVersion = '' + parseFloat(navigator.appVersion);
+        var majorVersion = parseInt(navigator.appVersion, 10);
+        var nameOffset, verOffset, ix;
+
+        // both and safri and chrome has same userAgent
+        if (isSafari && !isChrome && nAgt.indexOf('CriOS') !== -1) {
+            isSafari = false;
+            isChrome = true;
+        }
+
+        // In Opera, the true version is after 'Opera' or after 'Version'
+        if (isOpera) {
+            browserName = 'Opera';
+            try {
+                fullVersion = navigator.userAgent.split('OPR/')[1].split(' ')[0];
+                majorVersion = fullVersion.split('.')[0];
+            } catch (e) {
+                fullVersion = '0.0.0.0';
+                majorVersion = 0;
+            }
+        }
+        // In MSIE version <=10, the true version is after 'MSIE' in userAgent
+        // In IE 11, look for the string after 'rv:'
+        else if (isIE) {
+            verOffset = nAgt.indexOf('rv:');
+            if (verOffset > 0) { //IE 11
+                fullVersion = nAgt.substring(verOffset + 3);
+            } else { //IE 10 or earlier
+                verOffset = nAgt.indexOf('MSIE');
+                fullVersion = nAgt.substring(verOffset + 5);
+            }
+            browserName = 'IE';
+        }
+        // In Chrome, the true version is after 'Chrome' 
+        else if (isChrome) {
+            verOffset = nAgt.indexOf('Chrome');
+            browserName = 'Chrome';
+            fullVersion = nAgt.substring(verOffset + 7);
+        }
+        // In Safari, the true version is after 'Safari' or after 'Version' 
+        else if (isSafari) {
+            verOffset = nAgt.indexOf('Safari');
+
+            browserName = 'Safari';
+            fullVersion = nAgt.substring(verOffset + 7);
+
+            if ((verOffset = nAgt.indexOf('Version')) !== -1) {
+                fullVersion = nAgt.substring(verOffset + 8);
+            }
+
+            if (navigator.userAgent.indexOf('Version/') !== -1) {
+                fullVersion = navigator.userAgent.split('Version/')[1].split(' ')[0];
+            }
+        }
+        // In Firefox, the true version is after 'Firefox' 
+        else if (isFirefox) {
+            verOffset = nAgt.indexOf('Firefox');
+            browserName = 'Firefox';
+            fullVersion = nAgt.substring(verOffset + 8);
+        }
+
+        // In most other browsers, 'name/version' is at the end of userAgent 
+        else if ((nameOffset = nAgt.lastIndexOf(' ') + 1) < (verOffset = nAgt.lastIndexOf('/'))) {
+            browserName = nAgt.substring(nameOffset, verOffset);
+            fullVersion = nAgt.substring(verOffset + 1);
+
+            if (browserName.toLowerCase() === browserName.toUpperCase()) {
+                browserName = navigator.appName;
+            }
+        }
+
+        if (isEdge) {
+            browserName = 'Edge';
+            fullVersion = navigator.userAgent.split('Edge/')[1];
+            // fullVersion = parseInt(navigator.userAgent.match(/Edge\/(\d+).(\d+)$/)[2], 10).toString();
+        }
+
+        // trim the fullVersion string at semicolon/space/bracket if present
+        if ((ix = fullVersion.search(/[; \)]/)) !== -1) {
+            fullVersion = fullVersion.substring(0, ix);
+        }
+
+        majorVersion = parseInt('' + fullVersion, 10);
+
+        if (isNaN(majorVersion)) {
+            fullVersion = '' + parseFloat(navigator.appVersion);
+            majorVersion = parseInt(navigator.appVersion, 10);
+        }
+
+        return {
+            fullVersion: fullVersion,
+            version: majorVersion,
+            name: browserName,
+            isPrivateBrowsing: false
+        };
+    }
+
+    // via: https://gist.github.com/cou929/7973956
+
+    function retry(isDone, next) {
+        var currentTrial = 0,
+            maxRetry = 50,
+            interval = 10,
+            isTimeout = false;
+        var id = window.setInterval(
+            function() {
+                if (isDone()) {
+                    window.clearInterval(id);
+                    next(isTimeout);
+                }
+                if (currentTrial++ > maxRetry) {
+                    window.clearInterval(id);
+                    isTimeout = true;
+                    next(isTimeout);
+                }
+            },
+            10
+        );
+    }
+
+    function isIE10OrLater(userAgent) {
+        var ua = userAgent.toLowerCase();
+        if (ua.indexOf('msie') === 0 && ua.indexOf('trident') === 0) {
+            return false;
+        }
+        var match = /(?:msie|rv:)\s?([\d\.]+)/.exec(ua);
+        if (match && parseInt(match[1], 10) >= 10) {
+            return true;
+        }
+        return false;
+    }
+
+    function detectPrivateMode(callback) {
+        var isPrivate;
+
+        try {
+
+            if (window.webkitRequestFileSystem) {
+                window.webkitRequestFileSystem(
+                    window.TEMPORARY, 1,
+                    function() {
+                        isPrivate = false;
+                    },
+                    function(e) {
+                        isPrivate = true;
+                    }
+                );
+            } else if (window.indexedDB && /Firefox/.test(window.navigator.userAgent)) {
+                var db;
+                try {
+                    db = window.indexedDB.open('test');
+                    db.onerror = function() {
+                        return true;
+                    };
+                } catch (e) {
+                    isPrivate = true;
+                }
+
+                if (typeof isPrivate === 'undefined') {
+                    retry(
+                        function isDone() {
+                            return db.readyState === 'done' ? true : false;
+                        },
+                        function next(isTimeout) {
+                            if (!isTimeout) {
+                                isPrivate = db.result ? false : true;
+                            }
+                        }
+                    );
+                }
+            } else if (isIE10OrLater(window.navigator.userAgent)) {
+                isPrivate = false;
+                try {
+                    if (!window.indexedDB) {
+                        isPrivate = true;
+                    }
+                } catch (e) {
+                    isPrivate = true;
+                }
+            } else if (window.localStorage && /Safari/.test(window.navigator.userAgent)) {
+                try {
+                    window.localStorage.setItem('test', 1);
+                } catch (e) {
+                    isPrivate = true;
+                }
+
+                if (typeof isPrivate === 'undefined') {
+                    isPrivate = false;
+                    window.localStorage.removeItem('test');
+                }
+            }
+
+        } catch (e) {
+            isPrivate = false;
+        }
+
+        retry(
+            function isDone() {
+                return typeof isPrivate !== 'undefined' ? true : false;
+            },
+            function next(isTimeout) {
+                callback(isPrivate);
+            }
+        );
+    }
+
+    var isMobile = {
+        Android: function() {
+            return navigator.userAgent.match(/Android/i);
+        },
+        BlackBerry: function() {
+            return navigator.userAgent.match(/BlackBerry|BB10/i);
+        },
+        iOS: function() {
+            return navigator.userAgent.match(/iPhone|iPad|iPod/i);
+        },
+        Opera: function() {
+            return navigator.userAgent.match(/Opera Mini/i);
+        },
+        Windows: function() {
+            return navigator.userAgent.match(/IEMobile/i);
+        },
+        any: function() {
+            return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile.Opera() || isMobile.Windows());
+        },
+        getOsName: function() {
+            var osName = 'Unknown OS';
+            if (isMobile.Android()) {
+                osName = 'Android';
+            }
+
+            if (isMobile.BlackBerry()) {
+                osName = 'BlackBerry';
+            }
+
+            if (isMobile.iOS()) {
+                osName = 'iOS';
+            }
+
+            if (isMobile.Opera()) {
+                osName = 'Opera Mini';
+            }
+
+            if (isMobile.Windows()) {
+                osName = 'Windows';
+            }
+
+            return osName;
+        }
+    };
+
+    // via: http://jsfiddle.net/ChristianL/AVyND/
+    function detectDesktopOS() {
+        var unknown = '-';
+
+        var nVer = navigator.appVersion;
+        var nAgt = navigator.userAgent;
+
+        var os = unknown;
+        var clientStrings = [{
+            s: 'Windows 10',
+            r: /(Windows 10.0|Windows NT 10.0)/
+        }, {
+            s: 'Windows 8.1',
+            r: /(Windows 8.1|Windows NT 6.3)/
+        }, {
+            s: 'Windows 8',
+            r: /(Windows 8|Windows NT 6.2)/
+        }, {
+            s: 'Windows 7',
+            r: /(Windows 7|Windows NT 6.1)/
+        }, {
+            s: 'Windows Vista',
+            r: /Windows NT 6.0/
+        }, {
+            s: 'Windows Server 2003',
+            r: /Windows NT 5.2/
+        }, {
+            s: 'Windows XP',
+            r: /(Windows NT 5.1|Windows XP)/
+        }, {
+            s: 'Windows 2000',
+            r: /(Windows NT 5.0|Windows 2000)/
+        }, {
+            s: 'Windows ME',
+            r: /(Win 9x 4.90|Windows ME)/
+        }, {
+            s: 'Windows 98',
+            r: /(Windows 98|Win98)/
+        }, {
+            s: 'Windows 95',
+            r: /(Windows 95|Win95|Windows_95)/
+        }, {
+            s: 'Windows NT 4.0',
+            r: /(Windows NT 4.0|WinNT4.0|WinNT|Windows NT)/
+        }, {
+            s: 'Windows CE',
+            r: /Windows CE/
+        }, {
+            s: 'Windows 3.11',
+            r: /Win16/
+        }, {
+            s: 'Android',
+            r: /Android/
+        }, {
+            s: 'Open BSD',
+            r: /OpenBSD/
+        }, {
+            s: 'Sun OS',
+            r: /SunOS/
+        }, {
+            s: 'Linux',
+            r: /(Linux|X11)/
+        }, {
+            s: 'iOS',
+            r: /(iPhone|iPad|iPod)/
+        }, {
+            s: 'Mac OS X',
+            r: /Mac OS X/
+        }, {
+            s: 'Mac OS',
+            r: /(MacPPC|MacIntel|Mac_PowerPC|Macintosh)/
+        }, {
+            s: 'QNX',
+            r: /QNX/
+        }, {
+            s: 'UNIX',
+            r: /UNIX/
+        }, {
+            s: 'BeOS',
+            r: /BeOS/
+        }, {
+            s: 'OS/2',
+            r: /OS\/2/
+        }, {
+            s: 'Search Bot',
+            r: /(nuhk|Googlebot|Yammybot|Openbot|Slurp|MSNBot|Ask Jeeves\/Teoma|ia_archiver)/
+        }];
+        for (var i = 0, cs; cs = clientStrings[i]; i++) {
+            if (cs.r.test(nAgt)) {
+                os = cs.s;
+                break;
+            }
+        }
+
+        var osVersion = unknown;
+
+        if (/Windows/.test(os)) {
+            if (/Windows (.*)/.test(os)) {
+                osVersion = /Windows (.*)/.exec(os)[1];
+            }
+            os = 'Windows';
+        }
+
+        switch (os) {
+            case 'Mac OS X':
+                if (/Mac OS X (10[\.\_\d]+)/.test(nAgt)) {
+                    osVersion = /Mac OS X (10[\.\_\d]+)/.exec(nAgt)[1];
+                }
+                break;
+            case 'Android':
+                if (/Android ([\.\_\d]+)/.test(nAgt)) {
+                    osVersion = /Android ([\.\_\d]+)/.exec(nAgt)[1];
+                }
+                break;
+            case 'iOS':
+                if (/OS (\d+)_(\d+)_?(\d+)?/.test(nAgt)) {
+                    osVersion = /OS (\d+)_(\d+)_?(\d+)?/.exec(nVer);
+                    osVersion = osVersion[1] + '.' + osVersion[2] + '.' + (osVersion[3] | 0);
+                }
+                break;
+        }
+
+        return {
+            osName: os,
+            osVersion: osVersion
+        };
+    }
+
+    var osName = 'Unknown OS';
+    var osVersion = 'Unknown OS Version';
+
+    function getAndroidVersion(ua) {
+        ua = (ua || navigator.userAgent).toLowerCase();
+        var match = ua.match(/android\s([0-9\.]*)/);
+        return match ? match[1] : false;
+    }
+
+    var osInfo = detectDesktopOS();
+
+    if (osInfo && osInfo.osName && osInfo.osName != '-') {
+        osName = osInfo.osName;
+        osVersion = osInfo.osVersion;
+    } else if (isMobile.any()) {
+        osName = isMobile.getOsName();
+
+        if (osName == 'Android') {
+            osVersion = getAndroidVersion();
+        }
+    }
+
+    var isNodejs = typeof process === 'object' && typeof process.versions === 'object' && process.versions.node;
+
+    if (osName === 'Unknown OS' && isNodejs) {
+        osName = 'Nodejs';
+        osVersion = process.versions.node.toString().replace('v', '');
+    }
+
+    var isCanvasSupportsStreamCapturing = false;
+    var isVideoSupportsStreamCapturing = false;
+    ['captureStream', 'mozCaptureStream', 'webkitCaptureStream'].forEach(function(item) {
+        if (typeof document === 'undefined' || typeof document.createElement !== 'function') {
+            return;
+        }
+
+        if (!isCanvasSupportsStreamCapturing && item in document.createElement('canvas')) {
+            isCanvasSupportsStreamCapturing = true;
+        }
+
+        if (!isVideoSupportsStreamCapturing && item in document.createElement('video')) {
+            isVideoSupportsStreamCapturing = true;
+        }
+    });
+
+    var regexIpv4Local = /^(192\.168\.|169\.254\.|10\.|172\.(1[6-9]|2\d|3[01]))/,
+        regexIpv4 = /([0-9]{1,3}(\.[0-9]{1,3}){3})/,
+        regexIpv6 = /[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7}/;
+
+    // via: https://github.com/diafygi/webrtc-ips
+    function DetectLocalIPAddress(callback, stream) {
+        if (!DetectRTC.isWebRTCSupported) {
+            return;
+        }
+
+        var isPublic = true,
+            isIpv4 = true;
+        getIPs(function(ip) {
+            if (!ip) {
+                callback(); // Pass nothing to tell that ICE-gathering-ended
+            } else if (ip.match(regexIpv4Local)) {
+                isPublic = false;
+                callback('Local: ' + ip, isPublic, isIpv4);
+            } else if (ip.match(regexIpv6)) { //via https://ourcodeworld.com/articles/read/257/how-to-get-the-client-ip-address-with-javascript-only
+                isIpv4 = false;
+                callback('Public: ' + ip, isPublic, isIpv4);
+            } else {
+                callback('Public: ' + ip, isPublic, isIpv4);
+            }
+        }, stream);
+    }
+
+    function getIPs(callback, stream) {
+        if (typeof document === 'undefined' || typeof document.getElementById !== 'function') {
+            return;
+        }
+
+        var ipDuplicates = {};
+
+        var RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+
+        if (!RTCPeerConnection) {
+            var iframe = document.getElementById('iframe');
+            if (!iframe) {
+                return;
+            }
+            var win = iframe.contentWindow;
+            RTCPeerConnection = win.RTCPeerConnection || win.mozRTCPeerConnection || win.webkitRTCPeerConnection;
+        }
+
+        if (!RTCPeerConnection) {
+            return;
+        }
+
+        var peerConfig = null;
+
+        if (DetectRTC.browser === 'Chrome' && DetectRTC.browser.version < 58) {
+            // todo: add support for older Opera
+            peerConfig = {
+                optional: [{
+                    RtpDataChannels: true
+                }]
+            };
+        }
+
+        var servers = {
+            iceServers: [{
+                urls: 'stun:stun.l.google.com:19302'
+            }]
+        };
+
+        var pc = new RTCPeerConnection(servers, peerConfig);
+
+        if (stream) {
+            if (pc.addStream) {
+                pc.addStream(stream);
+            } else if (pc.addTrack && stream.getTracks()[0]) {
+                pc.addTrack(stream.getTracks()[0], stream);
+            }
+        }
+
+        function handleCandidate(candidate) {
+            if (!candidate) {
+                callback(); // Pass nothing to tell that ICE-gathering-ended
+                return;
+            }
+
+            var match = regexIpv4.exec(candidate);
+            if (!match) {
+                return;
+            }
+            var ipAddress = match[1];
+            var isPublic = (candidate.match(regexIpv4Local)),
+                isIpv4 = true;
+
+            if (ipDuplicates[ipAddress] === undefined) {
+                callback(ipAddress, isPublic, isIpv4);
+            }
+
+            ipDuplicates[ipAddress] = true;
+        }
+
+        // listen for candidate events
+        pc.onicecandidate = function(event) {
+            if (event.candidate && event.candidate.candidate) {
+                handleCandidate(event.candidate.candidate);
+            } else {
+                handleCandidate(); // Pass nothing to tell that ICE-gathering-ended
+            }
+        };
+
+        // create data channel
+        if (!stream) {
+            try {
+                pc.createDataChannel('sctp', {});
+            } catch (e) {}
+        }
+
+        // create an offer sdp
+        if (DetectRTC.isPromisesSupported) {
+            pc.createOffer().then(function(result) {
+                pc.setLocalDescription(result).then(afterCreateOffer);
+            });
+        } else {
+            pc.createOffer(function(result) {
+                pc.setLocalDescription(result, afterCreateOffer, function() {});
+            }, function() {});
+        }
+
+        function afterCreateOffer() {
+            var lines = pc.localDescription.sdp.split('\n');
+
+            lines.forEach(function(line) {
+                if (line && line.indexOf('a=candidate:') === 0) {
+                    handleCandidate(line);
+                }
+            });
+        }
+    }
+
+    var MediaDevices = [];
+
+    var audioInputDevices = [];
+    var audioOutputDevices = [];
+    var videoInputDevices = [];
+
+    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+        // Firefox 38+ seems having support of enumerateDevices
+        // Thanks @xdumaine/enumerateDevices
+        navigator.enumerateDevices = function(callback) {
+            var enumerateDevices = navigator.mediaDevices.enumerateDevices();
+            if (enumerateDevices && enumerateDevices.then) {
+                navigator.mediaDevices.enumerateDevices().then(callback).catch(function() {
+                    callback([]);
+                });
+            } else {
+                callback([]);
+            }
+        };
+    }
+
+    // Media Devices detection
+    var canEnumerate = false;
+
+    /*global MediaStreamTrack:true */
+    if (typeof MediaStreamTrack !== 'undefined' && 'getSources' in MediaStreamTrack) {
+        canEnumerate = true;
+    } else if (navigator.mediaDevices && !!navigator.mediaDevices.enumerateDevices) {
+        canEnumerate = true;
+    }
+
+    var hasMicrophone = false;
+    var hasSpeakers = false;
+    var hasWebcam = false;
+
+    var isWebsiteHasMicrophonePermissions = false;
+    var isWebsiteHasWebcamPermissions = false;
+
+    // http://dev.w3.org/2011/webrtc/editor/getusermedia.html#mediadevices
+    function checkDeviceSupport(callback) {
+        if (!canEnumerate) {
+            if (callback) {
+                callback();
+            }
+            return;
+        }
+
+        if (!navigator.enumerateDevices && window.MediaStreamTrack && window.MediaStreamTrack.getSources) {
+            navigator.enumerateDevices = window.MediaStreamTrack.getSources.bind(window.MediaStreamTrack);
+        }
+
+        if (!navigator.enumerateDevices && navigator.enumerateDevices) {
+            navigator.enumerateDevices = navigator.enumerateDevices.bind(navigator);
+        }
+
+        if (!navigator.enumerateDevices) {
+            if (callback) {
+                callback();
+            }
+            return;
+        }
+
+        MediaDevices = [];
+
+        audioInputDevices = [];
+        audioOutputDevices = [];
+        videoInputDevices = [];
+
+        hasMicrophone = false;
+        hasSpeakers = false;
+        hasWebcam = false;
+
+        isWebsiteHasMicrophonePermissions = false;
+        isWebsiteHasWebcamPermissions = false;
+
+        // to prevent duplication
+        var alreadyUsedDevices = {};
+
+        navigator.enumerateDevices(function(devices) {
+            devices.forEach(function(_device) {
+                var device = {};
+                for (var d in _device) {
+                    try {
+                        if (typeof _device[d] !== 'function') {
+                            device[d] = _device[d];
+                        }
+                    } catch (e) {}
+                }
+
+                if (alreadyUsedDevices[device.deviceId + device.label + device.kind]) {
+                    return;
+                }
+
+                // if it is MediaStreamTrack.getSources
+                if (device.kind === 'audio') {
+                    device.kind = 'audioinput';
+                }
+
+                if (device.kind === 'video') {
+                    device.kind = 'videoinput';
+                }
+
+                if (!device.deviceId) {
+                    device.deviceId = device.id;
+                }
+
+                if (!device.id) {
+                    device.id = device.deviceId;
+                }
+
+                if (!device.label) {
+                    device.isCustomLabel = true;
+
+                    if (device.kind === 'videoinput') {
+                        device.label = 'Camera ' + (videoInputDevices.length + 1);
+                    } else if (device.kind === 'audioinput') {
+                        device.label = 'Microphone ' + (audioInputDevices.length + 1);
+                    } else if (device.kind === 'audiooutput') {
+                        device.label = 'Speaker ' + (audioOutputDevices.length + 1);
+                    } else {
+                        device.label = 'Please invoke getUserMedia once.';
+                    }
+
+                    if (typeof DetectRTC !== 'undefined' && DetectRTC.browser.isChrome && DetectRTC.browser.version >= 46 && !/^(https:|chrome-extension:)$/g.test(location.protocol || '')) {
+                        if (typeof document !== 'undefined' && typeof document.domain === 'string' && document.domain.search && document.domain.search(/localhost|127.0./g) === -1) {
+                            device.label = 'HTTPs is required to get label of this ' + device.kind + ' device.';
+                        }
+                    }
+                } else {
+                    // Firefox on Android still returns empty label
+                    if (device.kind === 'videoinput' && !isWebsiteHasWebcamPermissions) {
+                        isWebsiteHasWebcamPermissions = true;
+                    }
+
+                    if (device.kind === 'audioinput' && !isWebsiteHasMicrophonePermissions) {
+                        isWebsiteHasMicrophonePermissions = true;
+                    }
+                }
+
+                if (device.kind === 'audioinput') {
+                    hasMicrophone = true;
+
+                    if (audioInputDevices.indexOf(device) === -1) {
+                        audioInputDevices.push(device);
+                    }
+                }
+
+                if (device.kind === 'audiooutput') {
+                    hasSpeakers = true;
+
+                    if (audioOutputDevices.indexOf(device) === -1) {
+                        audioOutputDevices.push(device);
+                    }
+                }
+
+                if (device.kind === 'videoinput') {
+                    hasWebcam = true;
+
+                    if (videoInputDevices.indexOf(device) === -1) {
+                        videoInputDevices.push(device);
+                    }
+                }
+
+                // there is no 'videoouput' in the spec.
+                MediaDevices.push(device);
+
+                alreadyUsedDevices[device.deviceId + device.label + device.kind] = device;
+            });
+
+            if (typeof DetectRTC !== 'undefined') {
+                // to sync latest outputs
+                DetectRTC.MediaDevices = MediaDevices;
+                DetectRTC.hasMicrophone = hasMicrophone;
+                DetectRTC.hasSpeakers = hasSpeakers;
+                DetectRTC.hasWebcam = hasWebcam;
+
+                DetectRTC.isWebsiteHasWebcamPermissions = isWebsiteHasWebcamPermissions;
+                DetectRTC.isWebsiteHasMicrophonePermissions = isWebsiteHasMicrophonePermissions;
+
+                DetectRTC.audioInputDevices = audioInputDevices;
+                DetectRTC.audioOutputDevices = audioOutputDevices;
+                DetectRTC.videoInputDevices = videoInputDevices;
+            }
+
+            if (callback) {
+                callback();
+            }
+        });
+    }
+
+    var DetectRTC = window.DetectRTC || {};
+
+    // ----------
+    // DetectRTC.browser.name || DetectRTC.browser.version || DetectRTC.browser.fullVersion
+    DetectRTC.browser = getBrowserInfo();
+
+    detectPrivateMode(function(isPrivateBrowsing) {
+        DetectRTC.browser.isPrivateBrowsing = !!isPrivateBrowsing;
+    });
+
+    // DetectRTC.isChrome || DetectRTC.isFirefox || DetectRTC.isEdge
+    DetectRTC.browser['is' + DetectRTC.browser.name] = true;
+
+    // -----------
+    DetectRTC.osName = osName;
+    DetectRTC.osVersion = osVersion;
+
+    var isNodeWebkit = typeof process === 'object' && typeof process.versions === 'object' && process.versions['node-webkit'];
+
+    // --------- Detect if system supports WebRTC 1.0 or WebRTC 1.1.
+    var isWebRTCSupported = false;
+    ['RTCPeerConnection', 'webkitRTCPeerConnection', 'mozRTCPeerConnection', 'RTCIceGatherer'].forEach(function(item) {
+        if (isWebRTCSupported) {
+            return;
+        }
+
+        if (item in window) {
+            isWebRTCSupported = true;
+        }
+    });
+    DetectRTC.isWebRTCSupported = isWebRTCSupported;
+
+    //-------
+    DetectRTC.isORTCSupported = typeof RTCIceGatherer !== 'undefined';
+
+    // --------- Detect if system supports screen capturing API
+    var isScreenCapturingSupported = false;
+    if (DetectRTC.browser.isChrome && DetectRTC.browser.version >= 35) {
+        isScreenCapturingSupported = true;
+    } else if (DetectRTC.browser.isFirefox && DetectRTC.browser.version >= 34) {
+        isScreenCapturingSupported = true;
+    } else if (DetectRTC.browser.isEdge && DetectRTC.browser.version >= 17) {
+        isScreenCapturingSupported = true; // navigator.getDisplayMedia
+    } else if (DetectRTC.osName === 'Android' && DetectRTC.browser.isChrome) {
+        isScreenCapturingSupported = true;
+    }
+
+    if (!/^(https:|chrome-extension:)$/g.test(location.protocol || '')) {
+        var isNonLocalHost = typeof document !== 'undefined' && typeof document.domain === 'string' && document.domain.search && document.domain.search(/localhost|127.0./g) === -1;
+        if (isNonLocalHost && (DetectRTC.browser.isChrome || DetectRTC.browser.isEdge || DetectRTC.browser.isOpera)) {
+            isScreenCapturingSupported = false;
+        } else if (DetectRTC.browser.isFirefox) {
+            isScreenCapturingSupported = false;
+        }
+    }
+    DetectRTC.isScreenCapturingSupported = isScreenCapturingSupported;
+
+    // --------- Detect if WebAudio API are supported
+    var webAudio = {
+        isSupported: false,
+        isCreateMediaStreamSourceSupported: false
+    };
+
+    ['AudioContext', 'webkitAudioContext', 'mozAudioContext', 'msAudioContext'].forEach(function(item) {
+        if (webAudio.isSupported) {
+            return;
+        }
+
+        if (item in window) {
+            webAudio.isSupported = true;
+
+            if (window[item] && 'createMediaStreamSource' in window[item].prototype) {
+                webAudio.isCreateMediaStreamSourceSupported = true;
+            }
+        }
+    });
+    DetectRTC.isAudioContextSupported = webAudio.isSupported;
+    DetectRTC.isCreateMediaStreamSourceSupported = webAudio.isCreateMediaStreamSourceSupported;
+
+    // ---------- Detect if SCTP/RTP channels are supported.
+
+    var isRtpDataChannelsSupported = false;
+    if (DetectRTC.browser.isChrome && DetectRTC.browser.version > 31) {
+        isRtpDataChannelsSupported = true;
+    }
+    DetectRTC.isRtpDataChannelsSupported = isRtpDataChannelsSupported;
+
+    var isSCTPSupportd = false;
+    if (DetectRTC.browser.isFirefox && DetectRTC.browser.version > 28) {
+        isSCTPSupportd = true;
+    } else if (DetectRTC.browser.isChrome && DetectRTC.browser.version > 25) {
+        isSCTPSupportd = true;
+    } else if (DetectRTC.browser.isOpera && DetectRTC.browser.version >= 11) {
+        isSCTPSupportd = true;
+    }
+    DetectRTC.isSctpDataChannelsSupported = isSCTPSupportd;
+
+    // ---------
+
+    DetectRTC.isMobileDevice = isMobileDevice; // "isMobileDevice" boolean is defined in "getBrowserInfo.js"
+
+    // ------
+    var isGetUserMediaSupported = false;
+    if (navigator.getUserMedia) {
+        isGetUserMediaSupported = true;
+    } else if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        isGetUserMediaSupported = true;
+    }
+
+    if (DetectRTC.browser.isChrome && DetectRTC.browser.version >= 46 && !/^(https:|chrome-extension:)$/g.test(location.protocol || '')) {
+        if (typeof document !== 'undefined' && typeof document.domain === 'string' && document.domain.search && document.domain.search(/localhost|127.0./g) === -1) {
+            isGetUserMediaSupported = 'Requires HTTPs';
+        }
+    }
+
+    if (DetectRTC.osName === 'Nodejs') {
+        isGetUserMediaSupported = false;
+    }
+    DetectRTC.isGetUserMediaSupported = isGetUserMediaSupported;
+
+    var displayResolution = '';
+    if (screen.width) {
+        var width = (screen.width) ? screen.width : '';
+        var height = (screen.height) ? screen.height : '';
+        displayResolution += '' + width + ' x ' + height;
+    }
+    DetectRTC.displayResolution = displayResolution;
+
+    function getAspectRatio(w, h) {
+        function gcd(a, b) {
+            return (b == 0) ? a : gcd(b, a % b);
+        }
+        var r = gcd(w, h);
+        return (w / r) / (h / r);
+    }
+
+    DetectRTC.displayAspectRatio = getAspectRatio(screen.width, screen.height).toFixed(2);
+
+    // ----------
+    DetectRTC.isCanvasSupportsStreamCapturing = isCanvasSupportsStreamCapturing;
+    DetectRTC.isVideoSupportsStreamCapturing = isVideoSupportsStreamCapturing;
+
+    if (DetectRTC.browser.name == 'Chrome' && DetectRTC.browser.version >= 53) {
+        if (!DetectRTC.isCanvasSupportsStreamCapturing) {
+            DetectRTC.isCanvasSupportsStreamCapturing = 'Requires chrome flag: enable-experimental-web-platform-features';
+        }
+
+        if (!DetectRTC.isVideoSupportsStreamCapturing) {
+            DetectRTC.isVideoSupportsStreamCapturing = 'Requires chrome flag: enable-experimental-web-platform-features';
+        }
+    }
+
+    // ------
+    DetectRTC.DetectLocalIPAddress = DetectLocalIPAddress;
+
+    DetectRTC.isWebSocketsSupported = 'WebSocket' in window && 2 === window.WebSocket.CLOSING;
+    DetectRTC.isWebSocketsBlocked = !DetectRTC.isWebSocketsSupported;
+
+    if (DetectRTC.osName === 'Nodejs') {
+        DetectRTC.isWebSocketsSupported = true;
+        DetectRTC.isWebSocketsBlocked = false;
+    }
+
+    DetectRTC.checkWebSocketsSupport = function(callback) {
+        callback = callback || function() {};
+        try {
+            var starttime;
+            var websocket = new WebSocket('wss://echo.websocket.org:443/');
+            websocket.onopen = function() {
+                DetectRTC.isWebSocketsBlocked = false;
+                starttime = (new Date).getTime();
+                websocket.send('ping');
+            };
+            websocket.onmessage = function() {
+                DetectRTC.WebsocketLatency = (new Date).getTime() - starttime + 'ms';
+                callback();
+                websocket.close();
+                websocket = null;
+            };
+            websocket.onerror = function() {
+                DetectRTC.isWebSocketsBlocked = true;
+                callback();
+            };
+        } catch (e) {
+            DetectRTC.isWebSocketsBlocked = true;
+            callback();
+        }
+    };
+
+    // -------
+    DetectRTC.load = function(callback) {
+        callback = callback || function() {};
+        checkDeviceSupport(callback);
+    };
+
+    // check for microphone/camera support!
+    if (typeof checkDeviceSupport === 'function') {
+        // checkDeviceSupport();
+    }
+
+    if (typeof MediaDevices !== 'undefined') {
+        DetectRTC.MediaDevices = MediaDevices;
+    } else {
+        DetectRTC.MediaDevices = [];
+    }
+
+    DetectRTC.hasMicrophone = hasMicrophone;
+    DetectRTC.hasSpeakers = hasSpeakers;
+    DetectRTC.hasWebcam = hasWebcam;
+
+    DetectRTC.isWebsiteHasWebcamPermissions = isWebsiteHasWebcamPermissions;
+    DetectRTC.isWebsiteHasMicrophonePermissions = isWebsiteHasMicrophonePermissions;
+
+    DetectRTC.audioInputDevices = audioInputDevices;
+    DetectRTC.audioOutputDevices = audioOutputDevices;
+    DetectRTC.videoInputDevices = videoInputDevices;
+
+    // ------
+    var isSetSinkIdSupported = false;
+    if (typeof document !== 'undefined' && typeof document.createElement === 'function' && 'setSinkId' in document.createElement('video')) {
+        isSetSinkIdSupported = true;
+    }
+    DetectRTC.isSetSinkIdSupported = isSetSinkIdSupported;
+
+    // -----
+    var isRTPSenderReplaceTracksSupported = false;
+    if (DetectRTC.browser.isFirefox && typeof mozRTCPeerConnection !== 'undefined' /*&& DetectRTC.browser.version > 39*/ ) {
+        /*global mozRTCPeerConnection:true */
+        if ('getSenders' in mozRTCPeerConnection.prototype) {
+            isRTPSenderReplaceTracksSupported = true;
+        }
+    } else if (DetectRTC.browser.isChrome && typeof webkitRTCPeerConnection !== 'undefined') {
+        /*global webkitRTCPeerConnection:true */
+        if ('getSenders' in webkitRTCPeerConnection.prototype) {
+            isRTPSenderReplaceTracksSupported = true;
+        }
+    }
+    DetectRTC.isRTPSenderReplaceTracksSupported = isRTPSenderReplaceTracksSupported;
+
+    //------
+    var isRemoteStreamProcessingSupported = false;
+    if (DetectRTC.browser.isFirefox && DetectRTC.browser.version > 38) {
+        isRemoteStreamProcessingSupported = true;
+    }
+    DetectRTC.isRemoteStreamProcessingSupported = isRemoteStreamProcessingSupported;
+
+    //-------
+    var isApplyConstraintsSupported = false;
+
+    /*global MediaStreamTrack:true */
+    if (typeof MediaStreamTrack !== 'undefined' && 'applyConstraints' in MediaStreamTrack.prototype) {
+        isApplyConstraintsSupported = true;
+    }
+    DetectRTC.isApplyConstraintsSupported = isApplyConstraintsSupported;
+
+    //-------
+    var isMultiMonitorScreenCapturingSupported = false;
+    if (DetectRTC.browser.isFirefox && DetectRTC.browser.version >= 43) {
+        // version 43 merely supports platforms for multi-monitors
+        // version 44 will support exact multi-monitor selection i.e. you can select any monitor for screen capturing.
+        isMultiMonitorScreenCapturingSupported = true;
+    }
+    DetectRTC.isMultiMonitorScreenCapturingSupported = isMultiMonitorScreenCapturingSupported;
+
+    DetectRTC.isPromisesSupported = !!('Promise' in window);
+
+    // version is generated by "grunt"
+    DetectRTC.version = '1.3.9';
+
+    if (typeof DetectRTC === 'undefined') {
+        window.DetectRTC = {};
+    }
+
+    var MediaStream = window.MediaStream;
+
+    if (typeof MediaStream === 'undefined' && typeof webkitMediaStream !== 'undefined') {
+        MediaStream = webkitMediaStream;
+    }
+
+    if (typeof MediaStream !== 'undefined' && typeof MediaStream === 'function') {
+        DetectRTC.MediaStream = Object.keys(MediaStream.prototype);
+    } else DetectRTC.MediaStream = false;
+
+    if (typeof MediaStreamTrack !== 'undefined') {
+        DetectRTC.MediaStreamTrack = Object.keys(MediaStreamTrack.prototype);
+    } else DetectRTC.MediaStreamTrack = false;
+
+    var RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+
+    if (typeof RTCPeerConnection !== 'undefined') {
+        DetectRTC.RTCPeerConnection = Object.keys(RTCPeerConnection.prototype);
+    } else DetectRTC.RTCPeerConnection = false;
+
+    window.DetectRTC = DetectRTC;
+
+    if (typeof module !== 'undefined' /* && !!module.exports*/ ) {
+        module.exports = DetectRTC;
+    }
+
+    if (typeof define === 'function' && define.amd) {
+        define('DetectRTC', [], function() {
+            return DetectRTC;
+        });
+    }
+})();
+
+}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"_process":6}],18:[function(require,module,exports){
 
 module.exports = require('./socket');
 
@@ -3805,7 +4957,7 @@ module.exports = require('./socket');
  */
 module.exports.parser = require('engine.io-parser');
 
-},{"./socket":18,"engine.io-parser":29}],18:[function(require,module,exports){
+},{"./socket":19,"engine.io-parser":30}],19:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -4553,7 +5705,7 @@ Socket.prototype.filterUpgrades = function (upgrades) {
   return filteredUpgrades;
 };
 
-},{"./transport":19,"./transports/index":20,"component-emitter":13,"debug":26,"engine.io-parser":29,"indexof":35,"parseqs":39,"parseuri":40}],19:[function(require,module,exports){
+},{"./transport":20,"./transports/index":21,"component-emitter":13,"debug":27,"engine.io-parser":30,"indexof":36,"parseqs":40,"parseuri":41}],20:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -4715,7 +5867,7 @@ Transport.prototype.onClose = function () {
   this.emit('close');
 };
 
-},{"component-emitter":13,"engine.io-parser":29}],20:[function(require,module,exports){
+},{"component-emitter":13,"engine.io-parser":30}],21:[function(require,module,exports){
 /**
  * Module dependencies
  */
@@ -4770,7 +5922,7 @@ function polling (opts) {
   }
 }
 
-},{"./polling-jsonp":21,"./polling-xhr":22,"./websocket":24,"xmlhttprequest-ssl":25}],21:[function(require,module,exports){
+},{"./polling-jsonp":22,"./polling-xhr":23,"./websocket":25,"xmlhttprequest-ssl":26}],22:[function(require,module,exports){
 (function (global){
 /**
  * Module requirements.
@@ -5013,7 +6165,7 @@ JSONPPolling.prototype.doWrite = function (data, fn) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling":23,"component-inherit":14}],22:[function(require,module,exports){
+},{"./polling":24,"component-inherit":14}],23:[function(require,module,exports){
 /* global attachEvent */
 
 /**
@@ -5430,7 +6582,7 @@ function unloadHandler () {
   }
 }
 
-},{"./polling":23,"component-emitter":13,"component-inherit":14,"debug":26,"xmlhttprequest-ssl":25}],23:[function(require,module,exports){
+},{"./polling":24,"component-emitter":13,"component-inherit":14,"debug":27,"xmlhttprequest-ssl":26}],24:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -5677,7 +6829,7 @@ Polling.prototype.uri = function () {
   return schema + '://' + (ipv6 ? '[' + this.hostname + ']' : this.hostname) + port + this.path + query;
 };
 
-},{"../transport":19,"component-inherit":14,"debug":26,"engine.io-parser":29,"parseqs":39,"xmlhttprequest-ssl":25,"yeast":76}],24:[function(require,module,exports){
+},{"../transport":20,"component-inherit":14,"debug":27,"engine.io-parser":30,"parseqs":40,"xmlhttprequest-ssl":26,"yeast":77}],25:[function(require,module,exports){
 (function (Buffer){
 /**
  * Module dependencies.
@@ -5974,7 +7126,7 @@ WS.prototype.check = function () {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"../transport":19,"buffer":3,"component-inherit":14,"debug":26,"engine.io-parser":29,"parseqs":39,"ws":2,"yeast":76}],25:[function(require,module,exports){
+},{"../transport":20,"buffer":3,"component-inherit":14,"debug":27,"engine.io-parser":30,"parseqs":40,"ws":2,"yeast":77}],26:[function(require,module,exports){
 // browser shim for xmlhttprequest module
 
 var hasCORS = require('has-cors');
@@ -6013,7 +7165,7 @@ module.exports = function (opts) {
   }
 };
 
-},{"has-cors":34}],26:[function(require,module,exports){
+},{"has-cors":35}],27:[function(require,module,exports){
 (function (process){
 /**
  * This is the web browser implementation of `debug()`.
@@ -6212,7 +7364,7 @@ function localstorage() {
 }
 
 }).call(this,require('_process'))
-},{"./debug":27,"_process":6}],27:[function(require,module,exports){
+},{"./debug":28,"_process":6}],28:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -6439,7 +7591,7 @@ function coerce(val) {
   return val;
 }
 
-},{"ms":28}],28:[function(require,module,exports){
+},{"ms":29}],29:[function(require,module,exports){
 /**
  * Helpers.
  */
@@ -6593,7 +7745,7 @@ function plural(ms, n, name) {
   return Math.ceil(ms / n) + ' ' + name + 's';
 }
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -7200,7 +8352,7 @@ exports.decodePayloadAsBinary = function (data, binaryType, callback) {
   });
 };
 
-},{"./keys":30,"./utf8":31,"after":7,"arraybuffer.slice":8,"base64-arraybuffer":10,"blob":11,"has-binary2":33}],30:[function(require,module,exports){
+},{"./keys":31,"./utf8":32,"after":7,"arraybuffer.slice":8,"base64-arraybuffer":10,"blob":11,"has-binary2":34}],31:[function(require,module,exports){
 
 /**
  * Gets the keys for an object.
@@ -7221,7 +8373,7 @@ module.exports = Object.keys || function keys (obj){
   return arr;
 };
 
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 /*! https://mths.be/utf8js v2.1.2 by @mathias */
 
 var stringFromCharCode = String.fromCharCode;
@@ -7433,7 +8585,7 @@ module.exports = {
 	decode: utf8decode
 };
 
-},{}],32:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 // originally pulled out of simple-peer
 
 module.exports = function getBrowserRTC () {
@@ -7450,7 +8602,7 @@ module.exports = function getBrowserRTC () {
   return wrtc
 }
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 (function (Buffer){
 /* global Blob File */
 
@@ -7518,7 +8670,7 @@ function hasBinary (obj) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":3,"isarray":37}],34:[function(require,module,exports){
+},{"buffer":3,"isarray":38}],35:[function(require,module,exports){
 
 /**
  * Module exports.
@@ -7537,7 +8689,7 @@ try {
   module.exports = false;
 }
 
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 
 var indexOf = [].indexOf;
 
@@ -7548,7 +8700,7 @@ module.exports = function(arr, obj){
   }
   return -1;
 };
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -7577,14 +8729,14 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],38:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 /**
  * Helpers.
  */
@@ -7748,7 +8900,7 @@ function plural(ms, msAbs, n, name) {
   return Math.round(ms / n) + ' ' + name + (isPlural ? 's' : '');
 }
 
-},{}],39:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 /**
  * Compiles a querystring
  * Returns string representation of the object
@@ -7787,7 +8939,7 @@ exports.decode = function(qs){
   return qry;
 };
 
-},{}],40:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 /**
  * Parses an URI
  *
@@ -7828,7 +8980,7 @@ module.exports = function parseuri(str) {
     return uri;
 };
 
-},{}],41:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 (function (process,global){
 'use strict'
 
@@ -7882,7 +9034,7 @@ function randomBytes (size, cb) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":6,"safe-buffer":42}],42:[function(require,module,exports){
+},{"_process":6,"safe-buffer":43}],43:[function(require,module,exports){
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
 var Buffer = buffer.Buffer
@@ -7946,7 +9098,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":3}],43:[function(require,module,exports){
+},{"buffer":3}],44:[function(require,module,exports){
 (function (Buffer){
 module.exports = Peer
 
@@ -8986,7 +10138,7 @@ function warn (message) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":3,"debug":15,"get-browser-rtc":32,"inherits":36,"randombytes":41,"readable-stream":58}],44:[function(require,module,exports){
+},{"buffer":3,"debug":15,"get-browser-rtc":33,"inherits":37,"randombytes":42,"readable-stream":59}],45:[function(require,module,exports){
 'use strict';
 
 function _inheritsLoose(subClass, superClass) { subClass.prototype = Object.create(superClass.prototype); subClass.prototype.constructor = subClass; subClass.__proto__ = superClass; }
@@ -9115,7 +10267,7 @@ createErrorType('ERR_UNKNOWN_ENCODING', function (arg) {
 createErrorType('ERR_STREAM_UNSHIFT_AFTER_END_EVENT', 'stream.unshift() after end event');
 module.exports.codes = codes;
 
-},{}],45:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 (function (process){
 'use strict'
 
@@ -9136,7 +10288,7 @@ module.exports.emitExperimentalWarning = process.emitWarning
   : noop;
 
 }).call(this,require('_process'))
-},{"_process":6}],46:[function(require,module,exports){
+},{"_process":6}],47:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -9278,7 +10430,7 @@ Object.defineProperty(Duplex.prototype, 'destroyed', {
   }
 });
 }).call(this,require('_process'))
-},{"./_stream_readable":48,"./_stream_writable":50,"_process":6,"inherits":36}],47:[function(require,module,exports){
+},{"./_stream_readable":49,"./_stream_writable":51,"_process":6,"inherits":37}],48:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -9318,7 +10470,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":49,"inherits":36}],48:[function(require,module,exports){
+},{"./_stream_transform":50,"inherits":37}],49:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -10408,7 +11560,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../errors":44,"../experimentalWarning":45,"./_stream_duplex":46,"./internal/streams/async_iterator":51,"./internal/streams/buffer_list":52,"./internal/streams/destroy":53,"./internal/streams/state":56,"./internal/streams/stream":57,"_process":6,"buffer":3,"events":4,"inherits":36,"string_decoder/":73,"util":2}],49:[function(require,module,exports){
+},{"../errors":45,"../experimentalWarning":46,"./_stream_duplex":47,"./internal/streams/async_iterator":52,"./internal/streams/buffer_list":53,"./internal/streams/destroy":54,"./internal/streams/state":57,"./internal/streams/stream":58,"_process":6,"buffer":3,"events":4,"inherits":37,"string_decoder/":74,"util":2}],50:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -10610,7 +11762,7 @@ function done(stream, er, data) {
   if (stream._transformState.transforming) throw new ERR_TRANSFORM_ALREADY_TRANSFORMING();
   return stream.push(null);
 }
-},{"../errors":44,"./_stream_duplex":46,"inherits":36}],50:[function(require,module,exports){
+},{"../errors":45,"./_stream_duplex":47,"inherits":37}],51:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -11296,7 +12448,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../errors":44,"./_stream_duplex":46,"./internal/streams/destroy":53,"./internal/streams/state":56,"./internal/streams/stream":57,"_process":6,"buffer":3,"inherits":36,"util-deprecate":75}],51:[function(require,module,exports){
+},{"../errors":45,"./_stream_duplex":47,"./internal/streams/destroy":54,"./internal/streams/state":57,"./internal/streams/stream":58,"_process":6,"buffer":3,"inherits":37,"util-deprecate":76}],52:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -11506,7 +12658,7 @@ var createReadableStreamAsyncIterator = function createReadableStreamAsyncIterat
 
 module.exports = createReadableStreamAsyncIterator;
 }).call(this,require('_process'))
-},{"./end-of-stream":54,"_process":6}],52:[function(require,module,exports){
+},{"./end-of-stream":55,"_process":6}],53:[function(require,module,exports){
 'use strict';
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
@@ -11696,7 +12848,7 @@ function () {
 
   return BufferList;
 }();
-},{"buffer":3,"util":2}],53:[function(require,module,exports){
+},{"buffer":3,"util":2}],54:[function(require,module,exports){
 (function (process){
 'use strict'; // undocumented cb() API, needed for core, not for public API
 
@@ -11784,7 +12936,7 @@ module.exports = {
   undestroy: undestroy
 };
 }).call(this,require('_process'))
-},{"_process":6}],54:[function(require,module,exports){
+},{"_process":6}],55:[function(require,module,exports){
 // Ported from https://github.com/mafintosh/end-of-stream with
 // permission from the author, Mathias Buus (@mafintosh).
 'use strict';
@@ -11889,7 +13041,7 @@ function eos(stream, opts, callback) {
 }
 
 module.exports = eos;
-},{"../../../errors":44}],55:[function(require,module,exports){
+},{"../../../errors":45}],56:[function(require,module,exports){
 // Ported from https://github.com/mafintosh/pump with
 // permission from the author, Mathias Buus (@mafintosh).
 'use strict';
@@ -11987,7 +13139,7 @@ function pipeline() {
 }
 
 module.exports = pipeline;
-},{"../../../errors":44,"./end-of-stream":54}],56:[function(require,module,exports){
+},{"../../../errors":45,"./end-of-stream":55}],57:[function(require,module,exports){
 'use strict';
 
 var ERR_INVALID_OPT_VALUE = require('../../../errors').codes.ERR_INVALID_OPT_VALUE;
@@ -12015,10 +13167,10 @@ function getHighWaterMark(state, options, duplexKey, isDuplex) {
 module.exports = {
   getHighWaterMark: getHighWaterMark
 };
-},{"../../../errors":44}],57:[function(require,module,exports){
+},{"../../../errors":45}],58:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":4}],58:[function(require,module,exports){
+},{"events":4}],59:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -12029,7 +13181,7 @@ exports.PassThrough = require('./lib/_stream_passthrough.js');
 exports.finished = require('./lib/internal/streams/end-of-stream.js');
 exports.pipeline = require('./lib/internal/streams/pipeline.js');
 
-},{"./lib/_stream_duplex.js":46,"./lib/_stream_passthrough.js":47,"./lib/_stream_readable.js":48,"./lib/_stream_transform.js":49,"./lib/_stream_writable.js":50,"./lib/internal/streams/end-of-stream.js":54,"./lib/internal/streams/pipeline.js":55}],59:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":47,"./lib/_stream_passthrough.js":48,"./lib/_stream_readable.js":49,"./lib/_stream_transform.js":50,"./lib/_stream_writable.js":51,"./lib/internal/streams/end-of-stream.js":55,"./lib/internal/streams/pipeline.js":56}],60:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -12125,7 +13277,7 @@ exports.connect = lookup;
 exports.Manager = require('./manager');
 exports.Socket = require('./socket');
 
-},{"./manager":60,"./socket":62,"./url":63,"debug":64,"socket.io-parser":68}],60:[function(require,module,exports){
+},{"./manager":61,"./socket":63,"./url":64,"debug":65,"socket.io-parser":69}],61:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -12700,7 +13852,7 @@ Manager.prototype.onreconnect = function () {
   this.emitAll('reconnect', attempt);
 };
 
-},{"./on":61,"./socket":62,"backo2":9,"component-bind":12,"component-emitter":13,"debug":64,"engine.io-client":17,"indexof":35,"socket.io-parser":68}],61:[function(require,module,exports){
+},{"./on":62,"./socket":63,"backo2":9,"component-bind":12,"component-emitter":13,"debug":65,"engine.io-client":18,"indexof":36,"socket.io-parser":69}],62:[function(require,module,exports){
 
 /**
  * Module exports.
@@ -12726,7 +13878,7 @@ function on (obj, ev, fn) {
   };
 }
 
-},{}],62:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -13166,7 +14318,7 @@ Socket.prototype.binary = function (binary) {
   return this;
 };
 
-},{"./on":61,"component-bind":12,"component-emitter":13,"debug":64,"has-binary2":33,"parseqs":39,"socket.io-parser":68,"to-array":74}],63:[function(require,module,exports){
+},{"./on":62,"component-bind":12,"component-emitter":13,"debug":65,"has-binary2":34,"parseqs":40,"socket.io-parser":69,"to-array":75}],64:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -13243,13 +14395,13 @@ function url (uri, loc) {
   return obj;
 }
 
-},{"debug":64,"parseuri":40}],64:[function(require,module,exports){
-arguments[4][26][0].apply(exports,arguments)
-},{"./debug":65,"_process":6,"dup":26}],65:[function(require,module,exports){
+},{"debug":65,"parseuri":41}],65:[function(require,module,exports){
 arguments[4][27][0].apply(exports,arguments)
-},{"dup":27,"ms":66}],66:[function(require,module,exports){
+},{"./debug":66,"_process":6,"dup":27}],66:[function(require,module,exports){
 arguments[4][28][0].apply(exports,arguments)
-},{"dup":28}],67:[function(require,module,exports){
+},{"dup":28,"ms":67}],67:[function(require,module,exports){
+arguments[4][29][0].apply(exports,arguments)
+},{"dup":29}],68:[function(require,module,exports){
 /*global Blob,File*/
 
 /**
@@ -13392,7 +14544,7 @@ exports.removeBlobs = function(data, callback) {
   }
 };
 
-},{"./is-buffer":69,"isarray":37}],68:[function(require,module,exports){
+},{"./is-buffer":70,"isarray":38}],69:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -13809,7 +14961,7 @@ function error(msg) {
   };
 }
 
-},{"./binary":67,"./is-buffer":69,"component-emitter":13,"debug":70,"isarray":37}],69:[function(require,module,exports){
+},{"./binary":68,"./is-buffer":70,"component-emitter":13,"debug":71,"isarray":38}],70:[function(require,module,exports){
 (function (Buffer){
 
 module.exports = isBuf;
@@ -13833,13 +14985,13 @@ function isBuf(obj) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":3}],70:[function(require,module,exports){
-arguments[4][26][0].apply(exports,arguments)
-},{"./debug":71,"_process":6,"dup":26}],71:[function(require,module,exports){
+},{"buffer":3}],71:[function(require,module,exports){
 arguments[4][27][0].apply(exports,arguments)
-},{"dup":27,"ms":72}],72:[function(require,module,exports){
+},{"./debug":72,"_process":6,"dup":27}],72:[function(require,module,exports){
 arguments[4][28][0].apply(exports,arguments)
-},{"dup":28}],73:[function(require,module,exports){
+},{"dup":28,"ms":73}],73:[function(require,module,exports){
+arguments[4][29][0].apply(exports,arguments)
+},{"dup":29}],74:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -14136,7 +15288,7 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":42}],74:[function(require,module,exports){
+},{"safe-buffer":43}],75:[function(require,module,exports){
 module.exports = toArray
 
 function toArray(list, index) {
@@ -14151,7 +15303,7 @@ function toArray(list, index) {
     return array
 }
 
-},{}],75:[function(require,module,exports){
+},{}],76:[function(require,module,exports){
 (function (global){
 
 /**
@@ -14222,7 +15374,7 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],76:[function(require,module,exports){
+},{}],77:[function(require,module,exports){
 'use strict';
 
 var alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'.split('')
@@ -14292,13 +15444,13 @@ yeast.encode = encode;
 yeast.decode = decode;
 module.exports = yeast;
 
-},{}],77:[function(require,module,exports){
+},{}],78:[function(require,module,exports){
 document.addEventListener("DOMContentLoaded", event => {
-  let localStream,
-    client = {};
+  let localStream,client = {};
   const Peer = require("simple-peer");
   const io = require("socket.io-client");
   const socket = io("https://tensorchat.herokuapp.com");
+  const DetectRTC = require("detectrtc");
   const clipboard = new ClipboardJS(".copy");
   const host_stream = document.getElementById("host_stream");
   const remote_stream = document.getElementById("remote_stream");
@@ -14307,6 +15459,7 @@ document.addEventListener("DOMContentLoaded", event => {
   const hangup = document.getElementById("hangup");
   const link = document.getElementById("link");
   const invBtn = document.getElementById("invite");
+  const waiting = document.getElementById("waiting");
 
   //initialize app with getUserMedia
   navigator.getMedia =
@@ -14321,6 +15474,13 @@ document.addEventListener("DOMContentLoaded", event => {
       audio: true
     })
     .then(stream => {
+      if (DetectRTC.isWebRTCSupported === false) {
+        alert("Device not supported!");
+      }
+      if (DetectRTC.osName === "iOS" && DetectRTC.browser !== "Safari") {
+        alert("Browser not supported! Please use Safari");
+      }
+
       //emit new client
       socket.emit("new_client", room);
       localStream = stream;
@@ -14343,6 +15503,7 @@ document.addEventListener("DOMContentLoaded", event => {
           trickle: false
         });
         peer.on("stream", stream => {
+          waiting.setAttribute("hidden", "");
           remote_stream.setAttribute("autoplay", "");
           remote_stream.setAttribute("muted", "");
           remote_stream.setAttribute("playsinline", "");
@@ -14398,11 +15559,11 @@ document.addEventListener("DOMContentLoaded", event => {
         if (client.peer) {
           client.peer.destroy();
         }
+        window.location.href = "/";
       };
 
       //hangup
       hangup.addEventListener("click", () => {
-        window.location.href = "https://tensorchat.herokuapp.com";
         remove_peer();
       });
 
@@ -14423,11 +15584,12 @@ document.addEventListener("DOMContentLoaded", event => {
       });
 
       //invite
-      invBtn.addEventListener("click", getUrl());
       function getUrl() {
         let url = window.location.href;
         link.value = url;
       }
+
+      invBtn.addEventListener("click", getUrl());
 
       //events
       socket.on("sent_offer", make_remote_peer);
@@ -14437,9 +15599,11 @@ document.addEventListener("DOMContentLoaded", event => {
       socket.on("create_peer", make_peer);
     })
     .catch(err => {
-      alert("Cannot get access to your camera! Check logs for more info.");
+      alert(
+        "Cannot get access to your media device! Check logs for more info."
+      );
       console.log(err);
     });
 });
 
-},{"simple-peer":43,"socket.io-client":59}]},{},[77]);
+},{"detectrtc":17,"simple-peer":44,"socket.io-client":60}]},{},[78]);

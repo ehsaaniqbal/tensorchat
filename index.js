@@ -16,13 +16,12 @@ let clients = 0;
 //@route -> index
 app.get("/", (req, res) => {
   res.render("index", { rooms: rooms });
-  
 });
 
 //@route -> room
 app.get("/r/:room", (req, res) => {
   if (rooms[req.params.room] == null) {
-    return res.send("Room does not exist");
+    return res.render("roomdoesnotexist");
   }
   res.render("room", { room_name: req.params.room });
 });
@@ -71,6 +70,11 @@ io.on("connection", socket => {
   socket.on("offer", send_offer);
   socket.on("answer", send_answer);
   socket.on("disconnect", disconnect);
+});
+
+app.use(function(req, res, next) {
+  res.status(404);
+  res.send('404');
 });
 
 server.listen(PORT, () => {
