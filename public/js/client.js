@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", event => {
       if (DetectRTC.isWebRTCSupported === false) {
         alert("Device not supported!");
       }
-      if (DetectRTC.osName === "iOS" && DetectRTC.browser !== "Safari") {
+      if (DetectRTC.osName === "iOS" && DetectRTC.browser === "Chrome") {
         alert("Browser not supported! Please use Safari");
       }
 
