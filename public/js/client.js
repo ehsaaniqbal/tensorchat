@@ -21,19 +21,20 @@ document.addEventListener("DOMContentLoaded", event => {
     navigator.mozGetUserMedia ||
     navigator.msGetUserMedia;
 
+    if (DetectRTC.isWebRTCSupported === false) {
+      alert("Device not supported!");
+    }
+    if (DetectRTC.osName === "iOS" && DetectRTC.browser === "Chrome") {
+      alert("Browser not supported! Please use Safari");
+    }
+      
   navigator.mediaDevices
     .getUserMedia({
       video: true,
       audio: true
     })
     .then(stream => {
-      if (DetectRTC.isWebRTCSupported === false) {
-        alert("Device not supported!");
-      }
-      if (DetectRTC.osName === "iOS" && DetectRTC.browser === "Chrome") {
-        alert("Browser not supported! Please use Safari");
-      }
-
+     
       //emit new client
       socket.emit("new_client", room);
       localStream = stream;
