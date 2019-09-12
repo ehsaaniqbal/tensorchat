@@ -11,7 +11,6 @@ app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
 
 const rooms = {};
-let clients = 0;
 
 //@route -> index
 app.get("/", (req, res) => {
@@ -29,7 +28,7 @@ app.get("/r/:room", (req, res) => {
 //@route -> createroom[post]
 app.post("/createroom", (req, res) => {
   if (rooms[req.body.room] != null) {
-    return res.redirect("/");
+    return res.render("roomalreadyexists");
   }
   rooms[req.body.room] = { users: {} };
   res.redirect(`/r/${req.body.room}`);
@@ -39,14 +38,20 @@ app.post("/createroom", (req, res) => {
 //socket connection established
 io.on("connection", socket => {
   socket.on("new_client", room => {
-    socket.join(room);
-    if (clients < 2) {
-      if (clients == 1) {
-        socket.emit("create_peer");
+    io.in(room).clients(function(error, clients) {
+      if (error) {
+        throw error;
       }
-    } else socket.emit("session_active");
+      if (clients.length >= 2) {
+        socket.emit("session_active");
+        return;
+      }
+      socket.join(room);
 
-    clients++;
+      if (clients.length < 2) {
+        if (clients.length == 1) socket.emit("create_peer");
+      }
+    });
   });
 
   const send_offer = (room, offer) => {
@@ -57,24 +62,19 @@ io.on("connection", socket => {
     socket.to(room).broadcast.emit("sent_answer", data);
   };
 
-  const disconnect = () => {
-    if (clients > 0) {
-      if (clients <= 2) {
-        socket.broadcast.emit("remove_peer");
-      }
-      clients--;
-    }
+  const disconnect = room => {
+    socket.to(room).emit("remove_peer");
   };
 
   //events
   socket.on("offer", send_offer);
   socket.on("answer", send_answer);
-  socket.on("disconnect", disconnect);
+  socket.on("user_disconnected", disconnect);
 });
 
 app.use(function(req, res, next) {
   res.status(404);
-  res.send('404');
+  res.send("404");
 });
 
 server.listen(PORT, () => {

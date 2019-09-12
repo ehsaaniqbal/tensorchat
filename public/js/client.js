@@ -1,8 +1,9 @@
 document.addEventListener("DOMContentLoaded", event => {
   let localStream,client = {};
+  let url = 'https://tensorchat.herokuapp.com';
   const Peer = require("simple-peer");
   const io = require("socket.io-client");
-  const socket = io("https://tensorchat.herokuapp.com");
+  const socket = io(`${url}`);
   const DetectRTC = require("detectrtc");
   const clipboard = new ClipboardJS(".copy");
   const host_stream = document.getElementById("host_stream");
@@ -110,14 +111,17 @@ document.addEventListener("DOMContentLoaded", event => {
       //handle destroy peer
       const remove_peer = () => {
         remote_stream.remove();
+        window.location.href = "/";
         if (client.peer) {
           client.peer.destroy();
         }
-        window.location.href = "/";
+       
       };
 
       //hangup
       hangup.addEventListener("click", () => {
+        socket.emit("user_disconnected", room)
+        //console.log(`ROOOM:::${room}`)
         remove_peer();
       });
 
@@ -148,9 +152,9 @@ document.addEventListener("DOMContentLoaded", event => {
       //events
       socket.on("sent_offer", make_remote_peer);
       socket.on("sent_answer", signal_answer);
-      socket.on("remove_peer", remove_peer);
       socket.on("session_active", session_active);
       socket.on("create_peer", make_peer);
+      socket.on("remove_peer", remove_peer)
     })
     .catch(err => {
       alert(
