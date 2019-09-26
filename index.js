@@ -2,81 +2,105 @@ const express = require("express");
 const app = express();
 const server = require("http").Server(app);
 const io = require("socket.io")(server);
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4000;
+const cors = require("cors");
 
 //middleware
-app.set("views", "./views");
-app.set("view engine", "ejs");
-app.use(express.static("public"));
+app.use(cors());
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const rooms = {};
 
-//@route -> index
+//@route get index
 app.get("/", (req, res) => {
-  res.render("index", { rooms: rooms });
+  res.json({ msg: "tensorchat api" });
 });
 
-//@route -> room
-app.get("/r/:room", (req, res) => {
-  if (rooms[req.params.room] == null) {
-    return res.render("roomdoesnotexist");
+//@route get room status
+app.post("/room", (req, res) => {
+  if (rooms[req.body.roomName] == null) {
+    return res.json({
+      data: {
+        roomName: `${req.body.roomName}`,
+        msg: "room_does_not_exist"
+      }
+    });
   }
-  res.render("room", { room_name: req.params.room });
+  res.json({
+    data: {
+      roomName: `${req.body.roomName}`,
+      msg: "room_exists"
+    }
+  });
 });
 
-//@route -> createroom[post]
+//@route create room
 app.post("/createroom", (req, res) => {
-  if (rooms[req.body.room] != null) {
-    return res.render("roomalreadyexists");
+  if (rooms[req.body.roomName] != null) {
+    return res.json({
+      data: {
+        roomName: `${req.body.roomName}`,
+        msg: "duplicate"
+      }
+    });
   }
-  rooms[req.body.room] = { users: {} };
-  res.redirect(`/r/${req.body.room}`);
-  io.emit("room_created", req.body.room);
+  rooms[req.body.roomName] = { users: [] };
+  res.json({
+    data: {
+      roomName: `${req.body.roomName}`,
+      msg: "created"
+    }
+  });
 });
 
 //socket connection established
 io.on("connection", socket => {
-  socket.on("new_client", room => {
-    io.in(room).clients(function(error, clients) {
+  //subscribe to room
+  const subscribe = room => {
+    io.in(room).clients((error, clients) => {
       if (error) {
         throw error;
       }
-      if (clients.length >= 2) {
+      if (clients.length > 2) {
         socket.emit("session_active");
         return;
       }
       socket.join(room);
+      rooms[room] = { users: [...clients] };
 
       if (clients.length < 2) {
-        if (clients.length == 1) socket.emit("create_peer");
+        if (clients.length == 1) socket.emit("create_host");
       }
     });
-  });
-
-  const send_offer = (room, offer) => {
-    socket.to(room).broadcast.emit("sent_offer", offer);
   };
 
-  const send_answer = (room, data) => {
-    socket.to(room).broadcast.emit("sent_answer", data);
+  //siganl offer to remote
+  const sendOffer = (room, offer) => {
+    socket.to(room).broadcast.emit("new_offer", offer);
   };
 
-  const disconnect = room => {
-    socket.to(room).emit("remove_peer");
+  //signal answer to remote
+  const sendAnswer = (room, data) => {
+    socket.to(room).broadcast.emit("new_answer", data);
   };
 
+  //user disconnected
+  const user_disconnected = room => {
+    socket.to(room).broadcast.emit("end");
+  };
   //events
-  socket.on("offer", send_offer);
-  socket.on("answer", send_answer);
-  socket.on("user_disconnected", disconnect);
+  socket.on("subscribe", subscribe);
+  socket.on("offer", sendOffer);
+  socket.on("answer", sendAnswer);
+  socket.on("user_disconnected", user_disconnected);
 });
 
 app.use(function(req, res, next) {
   res.status(404);
-  res.send("404");
+  res.send("4oh4");
 });
 
 server.listen(PORT, () => {
-  console.log(`Server started on PORT --> ${PORT}`);
+  console.log(`server started on PORT -> ${PORT}`);
 });

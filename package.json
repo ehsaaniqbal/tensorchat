@@ -1,6 +1,6 @@
 {
   "name": "TensorChat",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "A p2p chat app.",
   "main": "index.js",
   "scripts": {
@@ -10,10 +10,8 @@
   "author": "Ehsaan",
   "license": "MIT",
   "dependencies": {
-    "detectrtc": "^1.3.9",
-    "ejs": "^2.6.2",
+    "cors": "^2.8.5",
     "express": "^4.17.1",
-    "simple-peer": "^9.5.0",
     "socket.io": "^2.2.0"
   },
   "devDependencies": {

@@ -1,3 +1,8 @@
 /node_modules
-/public/js/bundle-test.js
 package-lock.json
+/client/node_modules
+/client/package-lock.json
+/client/build
+/client/.env
+/client/public/_redirects
+/client/public/robots.txt
