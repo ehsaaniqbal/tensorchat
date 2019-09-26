@@ -1,18 +1,20 @@
-@charset "UTF-8";
-/*
- =========================================================
- * Blk• Design System - v1.0.0
- =========================================================
+/*!
 
- * Product Page: https://www.creative-tim.com/product/blk-design-system
- * Copyright 2018 Creative Tim (http://www.creative-tim.com)
+=========================================================
+* BLK Design System React - v1.0.0
+=========================================================
 
+* Product Page: https://www.creative-tim.com/product/blk-design-system-react
+* Copyright 2019 Creative Tim (https://www.creative-tim.com)
+* Licensed under MIT (https://github.com/creativetimofficial/blk-design-system-react/blob/master/LICENSE.md)
 
- =========================================================
+* Coded by Creative Tim
 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+=========================================================
 
- */
+* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+*/
 /*     brand Colors              */
 /* navbar color */
 @keyframes move-left-right {
@@ -10268,9 +10270,6 @@ hr {
   .icon i, .icon svg {
     font-size: auto-0.75; }
 
-.icon + .icon-text {
-  padding-left: 1rem;
-  width: calc(100% - auto - 1); }
 
 .icon-xl {
   width: 5rem;
@@ -10278,8 +10277,6 @@ hr {
   .icon-xl i, .icon-xl svg {
     font-size: 4.25rem; }
 
-.icon-xl + .icon-text {
-  width: calc(100% - $icon-size-xl - 1); }
 
 .icon-lg {
   width: 3.7rem;
@@ -10287,8 +10284,6 @@ hr {
   .icon-lg i, .icon-lg svg {
     font-size: 2.95rem; }
 
-.icon-lg + .icon-text {
-  width: calc(100% - $icon-size-lg - 1); }
 
 .icon-sm {
   width: 1.875rem;
@@ -10296,8 +10291,7 @@ hr {
   .icon-sm i, .icon-sm svg {
     font-size: 1.125rem; }
 
-.icon-sm + .icon-text {
-  width: calc(100% - $icon-size-sm - 1); }
+
 
 .icon-shape {
   padding: 12px;
@@ -11957,55 +11951,55 @@ textarea.form-control {
   .register-page .square-1 {
     height: 300px;
     width: 300px;
-    background-image: url("../img/square1.png");
+    background-image: url("../../assets/img/square1.png");
     top: 175px;
     right: 150px;
     opacity: 0.8; }
   .register-page .square-2 {
     height: 120px;
     width: 120px;
-    background-image: url("../img/square2.png");
+    background-image: url("../../assets/img/square2.png");
     opacity: 0.9;
     top: 310px;
     right: 390px; }
   .register-page .square-3 {
     width: 200px;
     height: 200px;
-    background-image:url("../img/square3.png");
+    background-image: url("../../assets/img/square3.png");
     opacity: 0.3;
     top: -50px;
     right: 400px; }
   .register-page .square-4 {
     height: 200px;
     width: 200px;
-    background-image: url("../img/square4.png");
+    background-image: url("../../assets/img/square4.png");
     right: -50px;
     top: 525px; }
   .register-page .square-5 {
     height: 150px;
     width: 150px;
-    background-image: url("../img/square5.png");
+    background-image: url("../../assets/img/square5.png");
     opacity: 0.5;
     top: 500px;
     right: 470px; }
   .register-page .square-6 {
     height: 70px;
     width: 70px;
-    background-image: url("../img/square5.png");
+    background-image: url("../../assets/img/square5.png");
     opacity: 0.9;
     top: 105px;
     right: 20px; }
   .register-page .square-7 {
     height: 200px;
     width: 200px;
-    background-image: url("../img/square5.png");
+    background-image: url("../../assets/img/square5.png");
     left: -100px;
     top: 100px;
     opacity: .4; }
   .register-page .square-8 {
     height: 100px;
     width: 100px;
-    background-image: url("../img/square1.png");
+    background-image: url("../../assets/img/square1.png");
     left: 300px;
     top: 400px;
     opacity: .4; }
@@ -12014,7 +12008,7 @@ textarea.form-control {
 .landing-page,
 .profile-page,
 .register-page {
-  background-image: url("../img/dots.png");
+  background-image: url("../../assets/img/dots.png");
   background-size: contain; }
 
 @media (max-width: 991.98px) {
